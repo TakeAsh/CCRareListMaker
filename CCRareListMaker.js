@@ -14,6 +14,7 @@
     var forceName = ['－', '炎', '光', '風'];
     var bgColors = ['BGCOLOR(#7F7F7F):', 'BGCOLOR(#580000):', 'BGCOLOR(#505000):', 'BGCOLOR(#004000):'];
     var viewUrlBase = 'http://c4.concon-collector.com/view/default/';
+    var rareListBasePage = 'レア狐魂一覧(仮)';
     var br = '<br>\n';
 
     var textarea = document.getElementsByTagName('textarea')[0];
@@ -44,23 +45,36 @@
             lots[rareCC.lot_id][rareCC.rarity][rareCC.id] = rareCC;
         }
     }
-    var result = '';
-    result += '#contents' + br + br;
+    var lotGroups = [];
+    var groupTitles = [];
     for (var lot in lots) {
+        var index = lot == 0 ?
+            0 :
+            Math.floor((lot - 1) / 10) + 1;
         var lotHeader = lot == 0 ?
             'ショップ, 開始時, シリアル, イベント, 生成装置' :
             '第' + lot + '弾';
-        result += '* ' + lotHeader + br;
+        if (!lotGroups[index]) {
+            lotGroups[index] = '- [[' + rareListBasePage + ']]' + br + '#contents' + br + br;
+            groupTitles[index] = [];
+        }
+        lotGroups[index] += '* ' + lotHeader + br;
+        groupTitles[index].push(lotHeader);
         for (var rarity in lots[lot]) {
-            result += '- レア度' + rarity + br;
-            result += '|~名前|~勢力|~元|~換毛|h' + br;
+            lotGroups[index] += '- レア度' + rarity + br;
+            lotGroups[index] += '|~名前|~勢力|~元|~換毛数|~換毛|h' + br;
             for (var id in lots[lot][rarity]) {
-                result += lots[lot][rarity][id].ToTableItem(false);
+                lotGroups[index] += lots[lot][rarity][id].ToTableItem();
             }
-            result += br;
+            lotGroups[index] += br;
         }
     }
-    PrintNewWin(result);
+    var indexPage = '';
+    for (var i = 0, group; group = lotGroups[i]; ++i) {
+        PrintNewWin(group);
+        indexPage += '- [[' + groupTitles[i].join(', ') + '>' + rareListBasePage + '/' + i + ']]' + br;
+    }
+    PrintNewWin(indexPage);
 
     function RareCC(line) {
         var items = ('",' + line + ',"')
@@ -69,17 +83,18 @@
             this[field] = items[i + 1];
         }
         this.ids = [];
-        this.ToTableItem = function(showFurDetail) {
+        this.ToTableItem = function() {
             var bgColor = bgColors[this.force_id];
-            var fur = showFurDetail ?
-                this.ids.join(', ') :
-                (this.ids.length > 0 ?
-                    this.ids.length :
-                    '');
+            var furs = [];
+            for (var i = 0, id; id = this.ids[i]; ++i) {
+                furs.push('[[' + id + '>' + viewUrlBase + id + ']]');
+            }
+            var fur = furs.join(', ');
             return '|COLOR(white):' + bgColor + this.title + this.name +
                 '|COLOR(white):' + bgColor + forceName[this.force_id] +
-                '|[[' + this.id + '>' + viewUrlBase + this.id + ']]' +
-                '|' + fur +
+                '|' + bgColor + '[[' + this.id + '>' + viewUrlBase + this.id + ']]' +
+                '|COLOR(white):' + bgColor + (this.ids.length ? this.ids.length : '') +
+                '|' + bgColor + fur +
                 '|' + br;
         };
     }
