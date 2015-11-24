@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Rare List Maker
 // @namespace    http://www.TakeAsh.net/
-// @version      0.1.201511241200
+// @version      0.1.201511241930
 // @description  make ConCon Rare List source
 // @author       take-ash
 // @match        http://c4.concon-collector.com/help/alllist
