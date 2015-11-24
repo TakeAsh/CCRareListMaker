@@ -21,6 +21,8 @@
     var tableHeader = '|~名前|~勢力|~元|~換毛数|~換毛|h';
     var br = '<br>\n';
 
+    var lastModified = br + 'データ更新日: ' + new Date(window.document.lastModified)
+        .toLocaleString() + br;
     var textarea = document.getElementsByTagName('textarea')[0];
     var csv = textarea.textContent || textarea.innerText;
     var lines = csv.split(/\n/);
@@ -137,7 +139,7 @@
         var docNew = window.open('', '_blank')
             .document;
         docNew.open('text/html');
-        docNew.write('<html><body>\n' + text + '</body></html>');
+        docNew.write('<html><body>\n' + text + lastModified + '</body></html>');
         docNew.close();
     }
 })();
