@@ -15,6 +15,9 @@
     var bgColors = ['BGCOLOR(#7F7F7F):', 'BGCOLOR(#580000):', 'BGCOLOR(#505000):', 'BGCOLOR(#004000):'];
     var viewUrlBase = 'http://c4.concon-collector.com/view/default/';
     var rareListBasePage = 'レア狐魂一覧(仮)';
+    var numOfFurBasePage = '換毛が多い狐魂';
+    var numOfFurMin = 3; /**< 最低換毛数 */
+    var tableHeader = '|~名前|~勢力|~元|~換毛数|~換毛|h';
     var br = '<br>\n';
 
     var textarea = document.getElementsByTagName('textarea')[0];
@@ -62,13 +65,14 @@
         groupTitles[index].push(lotHeader);
         for (var rarity in lots[lot]) {
             lotGroups[index] += '- レア度' + rarity + br;
-            lotGroups[index] += '|~名前|~勢力|~元|~換毛数|~換毛|h' + br;
+            lotGroups[index] += tableHeader + br;
             for (var id in lots[lot][rarity]) {
                 lotGroups[index] += lots[lot][rarity][id].ToTableItem();
             }
             lotGroups[index] += br;
         }
     }
+
     var indexPage = '';
     PrintNewWin(lotGroups[0]);
     indexPage += '- [[' + groupTitles[0] + '>' + rareListBasePage + '/0' + ']]' + br;
@@ -81,7 +85,26 @@
             first + ' - ' + last;
         indexPage += '- [[' + title + '>' + rareListBasePage + '/' + i + ']]' + br;
     }
+    indexPage += '- [[' + numOfFurBasePage + ']]' + br;
     PrintNewWin(indexPage);
+
+    var furSortedRares = [];
+    for (var id in rares) {
+        if (rares[id].ids.length < numOfFurMin) {
+            continue;
+        }
+        furSortedRares.push(rares[id]);
+    }
+    furSortedRares.sort(function(a, b) {
+        return b.ids.length - a.ids.length;
+    });
+    var furSortedPage = '';
+    furSortedPage += '- [[' + rareListBasePage + ']]' + br + '#contents' + br + br;
+    furSortedPage += tableHeader + br;
+    for (var i = 0, rare; rare = furSortedRares[i]; ++i) {
+        furSortedPage += rare.ToTableItem();
+    }
+    PrintNewWin(furSortedPage);
 
     function RareCC(line) {
         var items = ('",' + line + ',"')
