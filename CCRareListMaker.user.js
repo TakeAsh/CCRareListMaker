@@ -16,6 +16,7 @@
     var bgColors = ['BGCOLOR(#7F7F7F):', 'BGCOLOR(#580000):', 'BGCOLOR(#505000):', 'BGCOLOR(#004000):'];
     var viewUrlBase = 'http://c4.concon-collector.com/view/default/';
     var rareListBasePage = 'レア狐魂一覧(仮)';
+    var numOfLotGroup = 10; /**< 1ページにまとめる弾数 */
     var numOfFurBasePage = '換毛が多い狐魂';
     var numOfFurMin = 3; /**< 最低換毛数 */
     var tableHeader = '|~名前|~勢力|~元|~換毛数|~換毛|h';
@@ -56,7 +57,7 @@
     for (var lot in lots) {
         var index = lot <= 0 ?
             0 :
-            Math.floor((lot - 1) / 10) + 1;
+            Math.floor((lot - 1) / numOfLotGroup) + 1;
         var lotHeader = lot <= 0 ?
             types[-lot] :
             '第' + lot + '弾';
