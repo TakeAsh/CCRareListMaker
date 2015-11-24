@@ -70,9 +70,16 @@
         }
     }
     var indexPage = '';
-    for (var i = 0, group; group = lotGroups[i]; ++i) {
+    PrintNewWin(lotGroups[0]);
+    indexPage += '- [[' + groupTitles[0] + '>' + rareListBasePage + '/0' + ']]' + br;
+    for (var i = 1, group; group = lotGroups[i]; ++i) {
         PrintNewWin(group);
-        indexPage += '- [[' + groupTitles[i].join(', ') + '>' + rareListBasePage + '/' + i + ']]' + br;
+        var first = groupTitles[i][0];
+        var last = groupTitles[i][groupTitles[i].length - 1];
+        var title = first == last ?
+            first :
+            first + ' - ' + last;
+        indexPage += '- [[' + title + '>' + rareListBasePage + '/' + i + ']]' + br;
     }
     PrintNewWin(indexPage);
 
