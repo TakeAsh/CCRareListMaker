@@ -15,7 +15,7 @@
     var types = ['狐魂生成', 'ショップ', '初期開始時', 'シリアル', '換毛', 'イベント', '生成装置'];
     var bgColors = ['BGCOLOR(#7F7F7F):', 'BGCOLOR(#580000):', 'BGCOLOR(#505000):', 'BGCOLOR(#004000):'];
     var viewUrlBase = 'http://c4.concon-collector.com/view/default/';
-    var rareListBasePage = 'レア狐魂一覧(仮)';
+    var rareListBasePage = 'レア狐魂一覧';
     var numOfLotGroup = 10; /**< 1ページにまとめる弾数 */
     var numOfFurBasePage = '換毛が多い狐魂';
     var numOfFurMin = 3; /**< 最低換毛数 */
