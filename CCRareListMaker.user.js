@@ -12,6 +12,7 @@
 
 (function() {
     var forceName = ['－', '炎', '光', '風'];
+    var types = ['狐魂生成', 'ショップ', '初期開始時', 'シリアル', '換毛', 'イベント', '生成装置'];
     var bgColors = ['BGCOLOR(#7F7F7F):', 'BGCOLOR(#580000):', 'BGCOLOR(#505000):', 'BGCOLOR(#004000):'];
     var viewUrlBase = 'http://c4.concon-collector.com/view/default/';
     var rareListBasePage = 'レア狐魂一覧(仮)';
@@ -51,11 +52,11 @@
     var lotGroups = [];
     var groupTitles = [];
     for (var lot in lots) {
-        var index = lot == 0 ?
+        var index = lot <= 0 ?
             0 :
             Math.floor((lot - 1) / 10) + 1;
-        var lotHeader = lot == 0 ?
-            'ショップ, 開始時, シリアル, イベント, 生成装置' :
+        var lotHeader = lot <= 0 ?
+            types[-lot] :
             '第' + lot + '弾';
         if (!lotGroups[index]) {
             lotGroups[index] = '- [[' + rareListBasePage + ']]' + br + '#contents' + br + br;
@@ -111,6 +112,9 @@
             .split(/","/);
         for (var i = 0, field; field = fields[i]; ++i) {
             this[field] = items[i + 1];
+        }
+        if (this.lot_id == 0) {
+            this.lot_id = -this.type;
         }
         this.ids = [];
         this.ToTableItem = function() {
