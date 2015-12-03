@@ -100,7 +100,9 @@
         furSortedRares.push(rares[id]);
     }
     furSortedRares.sort(function(a, b) {
-        return b.ids.length - a.ids.length;
+        return b.ids.length != a.ids.length ?
+            b.ids.length - a.ids.length :
+            a.id - b.id;
     });
     var furSortedPage = '';
     furSortedPage += '- [[' + rareListBasePage + ']]' + br + '#contents' + br + br;
