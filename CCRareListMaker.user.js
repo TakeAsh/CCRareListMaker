@@ -19,6 +19,7 @@
     var numOfLotGroup = 10; /**< 1ページにまとめる弾数 */
     var numOfFurBasePage = '換毛が多い狐魂';
     var numOfFurMin = 3; /**< 最低換毛数 */
+    var fixedItemPage = '固定置土産を持つレア狐魂';
     var tableHeader = '|~名前|~勢力|~元|~換毛数|~換毛|h';
     var br = '<br>\n';
 
@@ -90,6 +91,7 @@
         indexPage += '- [[' + title + '>' + rareListBasePage + '/' + i + ']]' + br;
     }
     indexPage += '- [[' + numOfFurBasePage + ']]' + br;
+    indexPage += '- [[' + fixedItemPage + ']]' + br;
     PrintNewWin(indexPage);
 
     var furSortedRares = [];
