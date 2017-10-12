@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Rare List Maker
 // @namespace    http://www.TakeAsh.net/
-// @version      0.1.201601070330
+// @version      0.1.201710130000
 // @description  make ConCon Rare List source
 // @author       take-ash
 // @match        http://c4.concon-collector.com/help/alllist
@@ -25,15 +25,11 @@
 
     var lastModified = br + 'データ更新日: ' + new Date(window.document.lastModified)
         .toLocaleString() + br;
-    var textarea = document.getElementsByTagName('textarea')[0];
-    var csv = textarea.textContent || textarea.innerText;
-    var lines = csv.split(/\n/);
-    var fields = lines.shift()
-        .replace(/"/g, '')
-        .split(',');
+    var source = document.body.textContent || document.body.innerText;
+    var concons = JSON.parse(source);
     var rares = {};
-    for (var i = 0, line; line = lines[i]; ++i) {
-        var rareCC = new RareCC(line);
+    for (var i = 0, concon; (concon = concons[i]); ++i) {
+        var rareCC = new RareCC(concon);
         if (rares[rareCC.same_id]) {
             rares[rareCC.same_id].ids.push(rareCC.id);
         } else {
@@ -81,7 +77,7 @@
     var indexPage = '';
     PrintNewWin(lotGroups[0]);
     indexPage += '- [[' + groupTitles[0] + '>' + rareListBasePage + '/0' + ']]' + br;
-    for (var i = 1, group; group = lotGroups[i]; ++i) {
+    for (var i = 1, group; (group = lotGroups[i]); ++i) {
         PrintNewWin(group);
         var first = groupTitles[i][0];
         var last = groupTitles[i][groupTitles[i].length - 1];
@@ -109,16 +105,14 @@
     var furSortedPage = '';
     furSortedPage += '- [[' + rareListBasePage + ']]' + br + '#contents' + br + br;
     furSortedPage += tableHeader + br;
-    for (var i = 0, rare; rare = furSortedRares[i]; ++i) {
+    for (var i = 0, rare; (rare = furSortedRares[i]); ++i) {
         furSortedPage += rare.ToTableItem();
     }
     PrintNewWin(furSortedPage);
 
-    function RareCC(line) {
-        var items = ('",' + line + ',"')
-            .split(/","/);
-        for (var i = 0, field; field = fields[i]; ++i) {
-            this[field] = items[i + 1];
+    function RareCC(concon) {
+        for (var p in concon) {
+            this[p] = concon[p];
         }
         if (this.lot_id == 0) {
             this.lot_id = -this.type;
@@ -127,7 +121,7 @@
         this.ToTableItem = function() {
             var bgColor = bgColors[this.force_id];
             var furs = [];
-            for (var i = 0, id; id = this.ids[i]; ++i) {
+            for (var i = 0, id; (id = this.ids[i]); ++i) {
                 furs.push('[[' + id + '>' + viewUrlBase + id + ']]');
             }
             var fur = furs.join(', ');
@@ -138,6 +132,7 @@
                 '|' + bgColor + fur +
                 '|' + br;
         };
+        return this;
     }
 
     function PrintNewWin(text) {
