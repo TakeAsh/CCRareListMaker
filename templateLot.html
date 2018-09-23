@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    <TMPL_VAR NAME=page_title>
+  </title>
+  <link rel="stylesheet" href="RareCC.css">
+</head>
+
+<body>
+  <h1>
+    <a name="top">
+      <TMPL_VAR NAME=page_title>
+    </a>
+  </h1>
+  <div class="toc">
+    <ul>
+      <li>
+        <p><a href="./">Index</a></p>
+      </li>
+    </ul>
+    <ul>
+      <TMPL_LOOP NAME=toc>
+        <li><a href="<TMPL_VAR NAME=toc_link>">
+            <TMPL_VAR NAME=toc_label>
+          </a>
+          <ul>
+            <TMPL_LOOP NAME=toc_rarities>
+              <li><a href="<TMPL_VAR NAME=toc_rarity_link>">
+                  <TMPL_VAR NAME=toc_rarity_label>
+                </a></li>
+            </TMPL_LOOP>
+          </ul>
+        </li>
+      </TMPL_LOOP>
+    </ul>
+  </div>
+  <TMPL_LOOP NAME=lots>
+    <h2>
+      <a name="<TMPL_VAR NAME=lot_link>">
+        <TMPL_VAR NAME=lot_label>
+      </a>
+    </h2>
+    <TMPL_LOOP NAME=rarities>
+      <h3>
+        <a name="<TMPL_VAR NAME=rarity_link>">
+          <TMPL_VAR NAME=rarity_label>
+        </a>
+      </h3>
+      <table>
+        <tr class="header-back">
+          <TMPL_LOOP NAME=rare_headers>
+            <th>
+              <TMPL_VAR NAME=rare_header>
+            </th>
+          </TMPL_LOOP>
+        </tr>
+        <TMPL_LOOP NAME=rares>
+          <tr class="<TMPL_VAR NAME=rare_style_force>">
+            <TMPL_LOOP NAME=rare_values>
+              <td class="<TMPL_VAR NAME=rare_value_class>">
+                <TMPL_VAR NAME=rare_value>
+              </td>
+            </TMPL_LOOP>
+          </tr>
+        </TMPL_LOOP>
+      </table>
+    </TMPL_LOOP>
+  </TMPL_LOOP>
+  <div class="footer-menu"><a href="#top">Top</a> <a href="./">Index</a></div>
+</body>
+
+</html>
+

@@ -1,0 +1,25 @@
+UriAllList: https://c4.concon-collector.com/help/alllist
+Forces: [－, 炎, 光, 風]
+Types: [狐魂生成, ショップ, 初期開始時, シリアル, 換毛, イベント, 生成装置]
+ViewUrlBase: http://c4.concon-collector.com/view/default/
+RareListBasePage: レア狐魂一覧
+NumOfLotGroup: 10 # 1ページにまとめる弾数
+NumOfFurBasePage: 換毛が多い狐魂
+NumOfFurMin: 5 # 換毛が多い狐魂として抽出する際の最低換毛数
+FixedItemPage: 固定置土産を持つレア狐魂
+TableHeaders:
+  - Key: title_name
+    Label: 名前
+  - Key: force
+    Label: 勢力
+    Class: align-center
+  - Key: id
+    Label: 元
+    Class: align-right
+  - Key: numOfFurs
+    Label: 換毛数
+    Class: align-center
+  - Key: furs
+    Label: 換毛
+templateLink: <a href="<TMPL_VAR NAME=base><TMPL_VAR NAME=id>" target="RareCC"><TMPL_VAR NAME=id></a>
+

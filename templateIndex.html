@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>レア狐魂一覧</title>
+  <link rel="stylesheet" href="RareCC.css">
+</head>
+
+<body>
+  <h1><a name="top">レア狐魂一覧</a></h1>
+  <div class="toc">
+    <ul>
+      <TMPL_LOOP NAME=toc>
+        <li><a href="<TMPL_VAR NAME=link>">
+            <TMPL_VAR NAME=label>
+          </a>
+        </li>
+      </TMPL_LOOP>
+    </ul>
+  </div>
+  <a href="//wiki.takeash.net/Game/ConConCollector/Home">ConConCollector</a>
+</body>
+
+</html>
+

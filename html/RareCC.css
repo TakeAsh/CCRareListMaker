@@ -1,0 +1,60 @@
+/* レア狐魂一覧用 CSS */
+
+body {
+  color: #ffffff;
+  background-color: #000000;
+}
+
+h1,
+h2,
+h3 {
+  color: #00cfff;
+  background-color: #002030;
+}
+
+a:link {
+  color: #ffff00;
+}
+
+a:visited {
+  color: #7fcf00;
+}
+
+.header-back {
+  background-color: #303030;
+}
+
+.toc {
+  background-color: #303030;
+}
+
+.force-back0 {
+  background-color: #7F7F7F;
+}
+
+.force-back1 {
+  background-color: #580000;
+}
+
+.force-back2 {
+  background-color: #505000;
+}
+
+.force-back3 {
+  background-color: #004000;
+}
+
+.align-right {
+  text-align: right;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.footer-menu {
+  position: fixed;
+  bottom: 0.5em;
+  right: 1em;
+}
+
