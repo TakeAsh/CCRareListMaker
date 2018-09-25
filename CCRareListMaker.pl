@@ -19,11 +19,17 @@ $YAML::Syck::ImplicitUnicode = 1;
 
 my $dirBase = $FindBin::RealBin . '/';
 my $conf = LoadFile( $dirBase . 'conf.yml' ) or die("conf.yml: $!");
-@RareCC::Forces           = @{ $conf->{'Forces'} };
-@RareCC::Types            = @{ $conf->{'Types'} };
-@RareCC::TableHeaders     = @{ $conf->{'TableHeaders'} };
-$RareCC::ViewUrlBase      = $conf->{'ViewUrlBase'};
-$RareCC::templateLink     = HTML::Template->new( scalarref => \$conf->{'templateLink'}, utf8 => 1 );
+@RareCC::Forces       = @{ $conf->{'Forces'} };
+@RareCC::Types        = @{ $conf->{'Types'} };
+@RareCC::TableHeaders = @{ $conf->{'TableHeaders'} };
+$RareCC::UriViewBase  = $conf->{'UriViewBase'};
+$RareCC::templateLink
+    = HTML::Template->new( scalarref => \( removeSpace( $conf->{'templateLink'} ) ) );
+$RareCC::UriIconBase = $conf->{'UriIconBase'};
+$RareCC::templateIconLink
+    = HTML::Template->new( scalarref => \( removeSpace( $conf->{'templateIconLink'} ) ) );
+
+#$RareCC::cards            = Cards->new( db => 'db.yml' );
 @RareCCs::TableHeaders    = @{ $conf->{'TableHeaders'} };
 $RareCCs::NumOfFurMin     = $conf->{'NumOfFurMin'};
 @Lot::Types               = @{ $conf->{'Types'} };
@@ -67,6 +73,12 @@ $templateIndex->param( toc => [@contentIndex] );
 $dirHtml->file("index.html")->spew( iomode => '>:utf8', $templateIndex->output );
 
 print "Content-type: text/plain\n\nFinish.";
+
+sub removeSpace {
+    my $html = shift or return;
+    $html =~ s/>\s+</></g;
+    return $html;
+}
 
 # EOF
 

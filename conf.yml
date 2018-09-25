@@ -1,7 +1,8 @@
 UriAllList: https://c4.concon-collector.com/help/alllist
 Forces: [－, 炎, 光, 風]
 Types: [狐魂生成, ショップ, 初期開始時, シリアル, 換毛, イベント, 生成装置]
-ViewUrlBase: http://c4.concon-collector.com/view/default/
+UriViewBase: https://c4.concon-collector.com/view/default/
+UriIconBase: https://www.takeash.net/ConConCollector/card/
 RareListBasePage: レア狐魂一覧
 NumOfLotGroup: 10 # 1ページにまとめる弾数
 NumOfFurBasePage: 換毛が多い狐魂
@@ -21,5 +22,13 @@ TableHeaders:
     Class: align-center
   - Key: furs
     Label: 換毛
-templateLink: <a href="<TMPL_VAR NAME=base><TMPL_VAR NAME=id>" target="RareCC"><TMPL_VAR NAME=id></a>
+templateLink: |
+  <a href="<TMPL_VAR NAME=base><TMPL_VAR NAME=id>" target="RareCC">
+    <TMPL_VAR NAME=id>
+  </a>
+templateIconLink: |
+  <a href="<TMPL_VAR NAME=base_view><TMPL_VAR NAME=id>" target="RareCC">
+    <img src="<TMPL_VAR NAME=base_card><TMPL_VAR NAME=icon>" 
+      title="<TMPL_VAR NAME=id>" width="60" height="60">
+  </a>
 

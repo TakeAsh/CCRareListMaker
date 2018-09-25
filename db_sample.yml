@@ -1,0 +1,26 @@
+DB:
+  Driver:   mysql
+  Server:   localhost
+  DB:       YourDB
+  Port:     3306
+  User:     YourUser
+  Password: "YourPassword"
+  Options:
+    mysql_enable_utf8: 1
+  DSN:      DBI:_Driver_:host=_Server_;database=_DB_;port=_Port_;
+
+SQL:
+  Create: |
+    CREATE TABLE `RareCCs` ( 
+      `id` int(11) NOT NULL, 
+      `icon` varchar(16) NOT NULL, 
+      PRIMARY KEY (`id`) 
+    ) DEFAULT CHARSET=utf8;
+  Insert: |
+    INSERT INTO `RareCCs` 
+    (`id`, `icon`) VALUES (?, ?) 
+    ON DUPLICATE KEY 
+    UPDATE `icon` = VALUES(`icon`);
+  Select: |
+    SELECT `id`, `icon` 
+    FROM `RareCCs`;

@@ -9,11 +9,14 @@ package RareCC {
     use Object::Simple -base;
     use HTML::Template;
 
-    our @Forces       = ();
-    our @Types        = ();
-    our @TableHeaders = ();
-    our $ViewUrlBase  = '';
-    our $templateLink = '';
+    our @Forces           = ();
+    our @Types            = ();
+    our @TableHeaders     = ();
+    our $UriViewBase      = '';
+    our $templateLink     = undef;
+    our $UriIconBase      = '';
+    our $templateIconLink = undef;
+    our $cards            = undef;
 
     has id       => 0;
     has same_id  => 0;
@@ -63,8 +66,22 @@ package RareCC {
     sub getLink {
         my $self = shift;
         my $id = shift || $self->id;
-        $templateLink->param( base => $ViewUrlBase, id => $id );
-        return $templateLink->output;
+        my $icon
+            = !$cards
+            ? undef
+            : $cards->getIcon($id);
+        if ( !$icon ) {
+            $templateLink->param( base => $UriViewBase, id => $id );
+            return $templateLink->output;
+        } else {
+            $templateIconLink->param(
+                base_view => $UriViewBase,
+                id        => $id,
+                base_card => $UriIconBase,
+                icon      => $icon
+            );
+            return $templateIconLink->output;
+        }
     }
 
     sub numOfFurs {
@@ -283,6 +300,82 @@ package LogGroups {
             }
             $self->{$index}->addLot($lot);
         }
+        return $self;
+    }
+}
+
+package Card {
+    use Object::Simple -base;
+
+    has id   => 0;
+    has icon => undef;
+
+    sub new {
+        my $self = shift->SUPER::new( id => $_[0], icon => $_[1] );
+        return $self;
+    }
+}
+
+package Cards {
+    use Object::Simple -base;
+    use YAML::Syck qw(LoadFile);
+    use DBI;
+
+    has yaml => undef;
+    has db   => undef;
+
+    sub new {
+        my $self = shift->SUPER::new(@_);
+        if ( !!$self->yaml ) {
+            $self->loadYaml;
+        } elsif ( !!$self->db ) {
+            $self->loadDB;
+        }
+        return $self;
+    }
+
+    sub getIcon {
+        my $self     = shift;
+        my $rareCCId = shift;
+        return !$self->{$rareCCId}
+            ? undef
+            : $self->{$rareCCId}->icon;
+    }
+
+    sub addCard {
+        my $self = shift;
+        my $card = shift;
+        $self->{ $card->id } = $card;
+    }
+
+    sub loadYaml {
+        my $self = shift;
+        if ( !( -f $self->yaml ) ) {
+            die( "Not Exist: " . $self->yaml );
+        }
+        my $cards = LoadFile( $self->yaml ) or die( $self->yaml . ": $!" );
+        map { $self->addCard( Card->new( $_, $cards->{$_} ) ) } keys( %{$cards} );
+        return $self;
+    }
+
+    sub loadDB {
+        my $self = shift;
+        if ( !( -f $self->db ) ) {
+            die( "Not Exist: " . $self->db );
+        }
+        my $db = LoadFile( $self->db ) or die( $self->db . ": $!" );
+        map { $db->{'DB'}{'DSN'} =~ s/_${_}_/$db->{'DB'}{$_}/; } keys( %{ $db->{'DB'} } );
+        my $dbh = DBI->connect(
+            $db->{'DB'}{'DSN'},      $db->{'DB'}{'User'},
+            $db->{'DB'}{'Password'}, $db->{'DB'}{'Options'}
+        ) or die("${DBI::errstr}");
+        my $sth = $dbh->prepare( $db->{'SQL'}{'Select'} ) or die("${DBI::errstr}");
+        $sth->execute() or die("${DBI::errstr}");
+        while ( my $record = $sth->fetchrow_hashref ) {
+            $self->addCard( Card->new( $record->{'id'}, $record->{'icon'} ) );
+        }
+        $sth->finish;
+        $dbh->disconnect;
         return $self;
     }
 }
