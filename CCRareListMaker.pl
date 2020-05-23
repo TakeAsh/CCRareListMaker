@@ -7,18 +7,18 @@ use utf8;
 use Encode;
 use LWP::Simple qw(mirror);
 use Path::Class qw(file dir);
-use JSON;
-use FindBin::libs;
 use YAML::Syck qw(LoadFile Dump DumpFile);
-use RareCC;
+use JSON::XS;
 use HTML::Template;
+use FindBin::libs;
+use RareCC;
 use Term::Encoding qw(term_encoding);
 use open ':std' => ':locale';
 
 $YAML::Syck::ImplicitUnicode = 1;
 
 my $dirBase = $FindBin::RealBin . '/';
-my $conf = LoadFile( $dirBase . 'conf.yml' ) or die("conf.yml: $!");
+my $conf    = LoadFile( $dirBase . 'conf.yml' ) or die("conf.yml: $!");
 @RareCC::Forces       = @{ $conf->{'Forces'} };
 @RareCC::Types        = @{ $conf->{'Types'} };
 @RareCC::TableHeaders = @{ $conf->{'TableHeaders'} };
@@ -29,15 +29,15 @@ $RareCC::UriIconBase = $conf->{'UriIconBase'};
 $RareCC::templateIconLink
     = HTML::Template->new( scalarref => \( removeSpace( $conf->{'templateIconLink'} ) ) );
 
-#$RareCC::cards            = Cards->new( db => 'db.yml' );
+$RareCC::cards            = Cards->new( db => 'db.yml' );
 @RareCCs::TableHeaders    = @{ $conf->{'TableHeaders'} };
 $RareCCs::NumOfFurMin     = $conf->{'NumOfFurMin'};
 @Lot::Types               = @{ $conf->{'Types'} };
 $LogGroups::NumOfLotGroup = $conf->{'NumOfLotGroup'};
 my $pathAllList = $dirBase . 'data/AllList.json';
-my $code = mirror( $conf->{'UriAllList'}, $pathAllList );
+my $code        = mirror( $conf->{'UriAllList'}, $pathAllList );
 chmod( 0666, $pathAllList );
-my $json        = JSON->new->utf8(0);
+my $json        = JSON::XS->new->utf8(0);
 my $fileAllList = file($pathAllList);
 my $textAllList = $fileAllList->slurp( iomode => '<:utf8' );
 $textAllList =~ s/\x{feff}//g;
@@ -72,7 +72,7 @@ my $templateIndex = HTML::Template->new( filename => $dirBase . 'templateIndex.h
 $templateIndex->param( toc => [@contentIndex] );
 $dirHtml->file("index.html")->spew( iomode => '>:utf8', $templateIndex->output );
 
-print "Content-type: text/plain\n\nFinish.";
+print "Content-type: text/plain\n\nFinish.\n";
 
 sub removeSpace {
     my $html = shift or return;
