@@ -1,8 +1,8 @@
 ﻿// ==UserScript==
 // @name           ConCon fur checker
 // @namespace      https://www.TakeAsh.net/
-// @ujs:published  2020-12-12 19:30
-// @version        0.1.202012121930
+// @ujs:published  2020-12-12 20:30
+// @version        0.1.202012122030
 // @description    check you have furs or not.
 // @author         TakeAsh68k
 // @match          https://c4.concon-collector.com/help/alllist
@@ -33,8 +33,11 @@ javascript:
 
   let docNew = window.open('', 'FurChecker').document;
   docNew.open('text/html');
-  docNew.write('<html>');
-  docNew.write('<head><link rel="stylesheet" type="text/css" href="/css/pc/cm.css"></head>');
+  docNew.write('<html lang="ja">');
+  docNew.write('<head><meta charset="utf-8">');
+  docNew.write('<meta name="viewport" content="width=device-width, initial-scale=1">');
+  docNew.write('<link rel="stylesheet" type="text/css" href="/css/pc/cm.css">');
+  docNew.write('<title>Fur Checker</title></head>');
   docNew.write('<body><table border="1">');
   docNew.write('<tr><th>#</th><th>換毛数</th><th>名前</th><th>初入手日時</th></tr>');
   ids.forEach((id, index) => docNew.write(rares[id].toRow(index + 1)));
