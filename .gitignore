@@ -199,3 +199,4 @@ FakesAssemblies/
 *.bak
 data/
 html/*.html
+db.yml
