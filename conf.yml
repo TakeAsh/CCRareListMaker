@@ -29,6 +29,6 @@ templateLink: |
 templateIconLink: |
   <a href="<TMPL_VAR NAME=base_view><TMPL_VAR NAME=id>" target="RareCC">
     <img src="<TMPL_VAR NAME=base_card><TMPL_VAR NAME=icon>" 
-      title="<TMPL_VAR NAME=id>" width="60" height="60">
+      title="<TMPL_VAR NAME=id>" width="60" height="60" loading="lazy">
   </a>
 
