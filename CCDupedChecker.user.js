@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Duplicated Checker
 // @namespace    https://www.TakeAsh.net/
-// @version      0.1.202205290900
+// @version      0.1.202205291600
 // @description  scan concon list and order by duplication
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/help/alllist
