@@ -73,6 +73,9 @@ javascript:
       concons[i] = await getDupes(concons[i]);
     }
     divResult.textContent = '';
-    divResult.appendChild(toTable(concons.sort((a, b) => b.dupes - a.dupes || a.id - b.id).slice(0, 20)));
+    const dupedConCons = concons.filter(concon => (concon.dupes || 0) > 0)
+      .sort((a, b) => b.dupes - a.dupes || a.id - b.id)
+      .slice(0, 20);
+    divResult.appendChild(toTable(dupedConCons));
   })();
 })();
