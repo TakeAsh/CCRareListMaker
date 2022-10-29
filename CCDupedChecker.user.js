@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Duplicated Checker
 // @namespace    https://www.TakeAsh.net/
-// @version      0.1.202205291600
+// @version      0.1.202210291730
 // @description  scan concon list and order by duplication
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/help/alllist
@@ -10,8 +10,12 @@
 // ==/UserScript==
 
 javascript:
-(function() {
+(async function() {
   'use strict';
+  if (location.origin != 'https://c4.concon-collector.com') {
+    alert('コンコンコレクターのサイトで実行して下さい');
+    return;
+  }
   const d = document;
   const divResult = d.createElement('div');
   d.body.appendChild(divResult);
@@ -62,20 +66,18 @@ javascript:
     });
     return table;
   };
-  (async () => {
-    const res = await fetch('/help/alllist');
-    const list = await res.json();
-    const concons = list.filter(concon => concon.id == concon.same_id);
-    for (let i = 0; i < concons.length; ++i) {
-      if (i % 20 == 0) {
-        divResult.textContent = `${i + 1}/${concons.length}`;
-      }
-      concons[i] = await getDupes(concons[i]);
+  const res = await fetch('/help/alllist');
+  const list = await res.json();
+  const concons = list.filter(concon => concon.id == concon.same_id);
+  for (let i = 0; i < concons.length; ++i) {
+    if (i % 20 == 0) {
+      divResult.textContent = `${i + 1}/${concons.length}`;
     }
-    divResult.textContent = '';
-    const dupedConCons = concons.filter(concon => (concon.dupes || 0) > 0)
-      .sort((a, b) => b.dupes - a.dupes || a.id - b.id)
-      .slice(0, 20);
-    divResult.appendChild(toTable(dupedConCons));
-  })();
+    concons[i] = await getDupes(concons[i]);
+  }
+  divResult.textContent = '';
+  const dupedConCons = concons.filter(concon => (concon.dupes || 0) > 0)
+    .sort((a, b) => b.dupes - a.dupes || a.id - b.id)
+    .slice(0, 20);
+  divResult.appendChild(toTable(dupedConCons));
 })();
