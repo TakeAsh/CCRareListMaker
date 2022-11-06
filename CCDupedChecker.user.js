@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Duplicated Checker
 // @namespace    https://www.TakeAsh.net/
-// @version      0.1.202211061300
+// @version      0.1.202211061600
 // @description  scan concon list and order by duplication
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/help/alllist
@@ -31,32 +31,57 @@ javascript:
   const range = (start, stop, step) =>
     Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + (i * step));
   const srcWorker = `
+  const regAnchor = /<a\\shref="[^"]+\\/cccontainer\\/pickid\\/[^"]+">([^<]+)<\\/a>/;
+  const regDupes = /\\（(\\d+)(\\+(\\d+))?[^\\)]+\\）/;
   self.addEventListener(
     'message',
     async (event) => {
-      const concons = event.data;
+      const id = event.data.id;
+      const concons = event.data.data;
+      let index = 0;
       for (const concon of concons) {
         const res = await fetch(\`\${location.origin}/view/default/\${concon.id}\`);
         const text = await res.text();
-        const anchor = /<a\\shref="[^"]+\\/cccontainer\\/pickid\\/[^"]+">([^<]+)<\\/a>/.exec(text);
+        const anchor = regAnchor.exec(text);
         if (anchor) {
-          const m = /\\（(\\d+)(\\+(\\d+))?[^\\)]+\\）/.exec(anchor[1]);
+          const m = regDupes.exec(anchor[1]);
           const same = m[1] * 1;
           const others = (m[3] || 0) * 1;
           concon.dupes = same + others;
           concon.dupesDetail = \`\${same}+\${others}\`;
         }
+        postMessage({
+          type: 'Progress',
+          progress: {
+            id: id,
+            message: \`\${++index}/\${concons.length}\`,
+          },
+        });
       }
-      postMessage(concons);
+      postMessage({ type: 'Complete', result: concons });
     }
   );`;
   const urlWorker = URL.createObjectURL(new Blob([srcWorker], { type: 'application/javascript' }));
-  const createWorker = (concons) => {
+  const createWorker = (id, initialData, reportProgress) => {
+    if (typeof reportProgress != 'function') { reportProgress = () => { }; }
     return new Promise((resolve, reject) => {
       const worker = new Worker(urlWorker);
-      worker.addEventListener('message', event => resolve(event.data));
+      worker.addEventListener(
+        'message',
+        (event) => {
+          const data = event.data;
+          switch (data.type) {
+            case 'Progress':
+              reportProgress(data.progress);
+              break;
+            case 'Complete':
+              resolve(data.result);
+              break;
+          }
+        }
+      );
       worker.addEventListener('error', reject);
-      worker.postMessage(concons);
+      worker.postMessage({ id: id, data: initialData });
     });
   };
   const res = await fetch('/help/alllist');
@@ -64,27 +89,28 @@ javascript:
   const baseConCons = list.filter(concon => concon.id == concon.same_id);
   console.log(baseConCons);
   let current = 0;
-  const updateStatus = (concons) => {
-    if (concons) { current += concons.length; }
+  const updateStatus = (progress) => {
+    if (progress) {
+      /* console.log(progress); */
+      ++current;
+    }
+    if (current % 50 != 0) { return; }
     divResult.textContent = `${current}/${baseConCons.length}`;
-    return concons;
   };
   updateStatus();
-  const lenUnit = baseConCons.length / (maxThreads * (maxThreads + 1) / 2.0);
-  const from = (i) => Math.ceil(lenUnit * i * (i + 1) / 2.0);
+  const from = (i) => Math.ceil(baseConCons.length * i / maxThreads);
   const dividedConCons = range(0, maxThreads - 1, 1)
     .map((i) => baseConCons.slice(from(i), from(i + 1)));
   console.log(dividedConCons);
   const scannedConCons = await Promise.all(
-    dividedConCons.map((concons) => createWorker(concons).then(updateStatus)));
+    dividedConCons.map((concons, index) => createWorker(index, concons, updateStatus)));
   URL.revokeObjectURL(urlWorker);
   console.log(`scannedConCons: ${current}`);
   console.log(scannedConCons);
   divResult.textContent = '';
-  const dupedConCons = scannedConCons.reduce(
-    (acc, cur) => acc.concat(cur.filter(concon => (concon.dupes || 0) > 0)),
-    []
-  ).sort((a, b) => b.dupes - a.dupes || a.id - b.id)
+  const dupedConCons = scannedConCons
+    .reduce((acc, cur) => acc.concat(cur.filter(cc => (cc.dupes || 0) > 0)), [])
+    .sort((a, b) => b.dupes - a.dupes || a.id - b.id)
     .slice(0, 20);
   const toTable = (concons) => {
     const table = d.createElement('table');
