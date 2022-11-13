@@ -30,38 +30,45 @@ javascript:
   }
   const range = (start, stop, step) =>
     Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + (i * step));
-  const srcWorker = `
-  const regAnchor = /<a\\shref="[^"]+\\/cccontainer\\/pickid\\/[^"]+">([^<]+)<\\/a>/;
-  const regDupes = /\\（(\\d+)(\\+(\\d+))?[^\\)]+\\）/;
-  self.addEventListener(
-    'message',
-    async (event) => {
-      const id = event.data.id;
-      const concons = event.data.data;
-      let index = 0;
-      for (const concon of concons) {
-        const res = await fetch(\`\${location.origin}/view/default/\${concon.id}\`);
-        const text = await res.text();
-        const anchor = regAnchor.exec(text);
-        if (anchor) {
-          const m = regDupes.exec(anchor[1]);
-          const same = m[1] * 1;
-          const others = (m[3] || 0) * 1;
-          concon.dupes = same + others;
-          concon.dupesDetail = \`\${same}+\${others}\`;
+  const srcWorker = () => {
+    const regTitle = /<title>([^<]+)<\/title>/;
+    const regAnchor = /<a\shref="[^"]+\/cccontainer\/pickid\/[^"]+">([^<]+)<\/a>/;
+    const regDupes = /\（(\d+)(\+(\d+))?[^\)]+\）/;
+    self.addEventListener(
+      'message',
+      async (event) => {
+        const id = event.data.id;
+        const concons = event.data.data;
+        let index = 0;
+        for (const concon of concons) {
+          const res = await fetch(`${location.origin}/view/default/${concon.id}`);
+          const text = await res.text();
+          let m;
+          if (!(m = text.match(regTitle)) || m[1] != 'コンコンコレクター 図鑑') {
+            postMessage({ type: 'Error', message: `worker[${id}]: ${text}}` });
+            return;
+          }
+          const anchor = regAnchor.exec(text);
+          if (anchor) {
+            const m = regDupes.exec(anchor[1]);
+            const same = m[1] * 1;
+            const others = (m[3] || 0) * 1;
+            concon.dupes = same + others;
+            concon.dupesDetail = `${same}+${others}`;
+          }
+          postMessage({
+            type: 'Progress',
+            progress: {
+              id: id,
+              message: `${++index}/${concons.length}`,
+            },
+          });
         }
-        postMessage({
-          type: 'Progress',
-          progress: {
-            id: id,
-            message: \`\${++index}/\${concons.length}\`,
-          },
-        });
+        postMessage({ type: 'Complete', result: concons });
       }
-      postMessage({ type: 'Complete', result: concons });
-    }
-  );`;
-  const urlWorker = URL.createObjectURL(new Blob([srcWorker], { type: 'application/javascript' }));
+    );
+  };
+  const urlWorker = URL.createObjectURL(new Blob([`(${srcWorker})();`], { type: 'application/javascript' }));
   const createWorker = (id, initialData, reportProgress) => {
     if (typeof reportProgress != 'function') { reportProgress = () => { }; }
     return new Promise((resolve, reject) => {
@@ -77,6 +84,9 @@ javascript:
             case 'Complete':
               resolve(data.result);
               break;
+            case 'Error':
+              reject(data.message);
+              break;
           }
         }
       );
@@ -88,8 +98,10 @@ javascript:
   const list = await res.json();
   const baseConCons = list.filter(concon => concon.id == concon.same_id);
   console.log(baseConCons);
+  let aborted = false;
   let current = 0;
   const updateStatus = (progress) => {
+    if (aborted) { return; }
     if (progress) {
       /* console.log(progress); */
       ++current;
@@ -103,9 +115,14 @@ javascript:
     .map((i) => baseConCons.slice(from(i), from(i + 1)));
   console.log(dividedConCons);
   const scannedConCons = await Promise.all(
-    dividedConCons.map((concons, index) => createWorker(index, concons, updateStatus)));
+    dividedConCons.map((concons, index) => createWorker(index, concons, updateStatus))
+  ).catch((err) => {
+    aborted = true;
+    divResult.textContent = err;
+  });
   URL.revokeObjectURL(urlWorker);
   console.log(`scannedConCons: ${current}`);
+  if (!scannedConCons) { return; }
   console.log(scannedConCons);
   divResult.textContent = '';
   const dupedConCons = scannedConCons
@@ -136,7 +153,7 @@ javascript:
       tdRarity.style.textAlign = 'center';
       const aName = d.createElement('a');
       tdName.appendChild(aName);
-      aName.href = `https://c4.concon-collector.com/view/default/${concon.id}`;
+      aName.href = `/view/default/${concon.id}`;
       aName.target = '_blank';
       aName.textContent = [concon.title, concon.name].join(' ');
     });
