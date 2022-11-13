@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Duplicated Checker
 // @namespace    https://www.TakeAsh.net/
-// @version      0.1.202211061600
+// @version      0.1.202211131500
 // @description  scan concon list and order by duplication
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/help/alllist
@@ -34,18 +34,27 @@ javascript:
     const regTitle = /<title>([^<]+)<\/title>/;
     const regAnchor = /<a\shref="[^"]+\/cccontainer\/pickid\/[^"]+">([^<]+)<\/a>/;
     const regDupes = /\（(\d+)(\+(\d+))?[^\)]+\）/;
+    let isCancelled = false;
     self.addEventListener(
       'message',
       async (event) => {
+        if (event.data == 'cancel') {
+          isCancelled = true;
+          return;
+        }
         const id = event.data.id;
         const concons = event.data.data;
         let index = 0;
         for (const concon of concons) {
+          if (isCancelled) {
+            postMessage({ type: 'Error', message: `worker[${id}]: cancelled` });
+            return;
+          }
           const res = await fetch(`${location.origin}/view/default/${concon.id}`);
           const text = await res.text();
           let m;
           if (!(m = text.match(regTitle)) || m[1] != 'コンコンコレクター 図鑑') {
-            postMessage({ type: 'Error', message: `worker[${id}]: ${text}}` });
+            postMessage({ type: 'Error', message: `worker[${id}]: ${text}` });
             return;
           }
           const anchor = regAnchor.exec(text);
@@ -68,7 +77,17 @@ javascript:
       }
     );
   };
-  const urlWorker = URL.createObjectURL(new Blob([`(${srcWorker})();`], { type: 'application/javascript' }));
+  const urlWorker = URL.createObjectURL(
+    new Blob([`(${srcWorker})();`], { type: 'application/javascript' }));
+  class workerController {
+    static #workers = [];
+    static add(worker) {
+      this.#workers.push(worker);
+    }
+    static cancelAll() {
+      this.#workers.forEach((worker) => { worker.postMessage('cancel'); })
+    }
+  }
   const createWorker = (id, initialData, reportProgress) => {
     if (typeof reportProgress != 'function') { reportProgress = () => { }; }
     return new Promise((resolve, reject) => {
@@ -85,6 +104,7 @@ javascript:
               resolve(data.result);
               break;
             case 'Error':
+              console.log(data.message);
               reject(data.message);
               break;
           }
@@ -92,6 +112,7 @@ javascript:
       );
       worker.addEventListener('error', reject);
       worker.postMessage({ id: id, data: initialData });
+      workerController.add(worker);
     });
   };
   const res = await fetch('/help/alllist');
@@ -118,6 +139,7 @@ javascript:
     dividedConCons.map((concons, index) => createWorker(index, concons, updateStatus))
   ).catch((err) => {
     aborted = true;
+    workerController.cancelAll();
     divResult.textContent = err;
   });
   URL.revokeObjectURL(urlWorker);
