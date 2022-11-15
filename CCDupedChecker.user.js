@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Duplicated Checker
 // @namespace    https://www.TakeAsh.net/
-// @version      0.1.202211140600
+// @version      0.1.202211160500
 // @description  scan concon list and order by duplication
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/help/alllist
@@ -118,7 +118,8 @@ javascript:
               case 'Progress':
                 this.#reportProgress(data.progress);
                 break;
-              case 'Complete':
+              case 'Completed':
+                console.log(data.message);
                 resolve(data.result);
                 break;
               case 'Error':
@@ -157,14 +158,14 @@ javascript:
         let index = 0;
         for (const concon of concons) {
           if (isCancelled) {
-            postMessage({ type: 'Error', message: `worker[${id}]: cancelled` });
+            postMessage({ type: 'Error', message: `worker[${id}]: cancelled`, });
             return;
           }
           const res = await fetch(`${location.origin}/view/default/${concon.id}`);
           const text = await res.text();
           let m;
           if (!(m = text.match(regTitle)) || m[1] != 'コンコンコレクター 図鑑') {
-            postMessage({ type: 'Error', message: `worker[${id}]: ${text}` });
+            postMessage({ type: 'Error', message: `worker[${id}]: ${text}`, });
             return;
           }
           const anchor = regAnchor.exec(text);
@@ -183,7 +184,11 @@ javascript:
             },
           });
         }
-        postMessage({ type: 'Complete', result: concons });
+        postMessage({
+          type: 'Completed',
+          message: `worker[${id}]: completed`,
+          result: concons,
+        });
       }
     );
   };
