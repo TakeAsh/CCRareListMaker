@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Duplicated Checker
 // @namespace    https://www.TakeAsh.net/
-// @version      0.1.202211160500
+// @version      0.1.202211170010
 // @description  scan concon list and order by duplication
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/help/alllist
@@ -89,25 +89,31 @@ javascript:
     }
   }
   class WorkerManager {
-    static #url = null;
-    static #reportProgress = () => { };
-    static #workers = [];
+    #url = null;
+    #reportProgress = () => { };
+    #workers = [];
     /**
      * @param {() => void} fnc
      */
-    static set source(fnc) {
+    set source(fnc) {
       if (typeof fnc != 'function') { return; }
       this.#url = URL.createObjectURL(
         new Blob([`(${fnc})();`], { type: 'application/javascript' }));
     }
-    static get reportProgress() {
+    get reportProgress() {
       return this.#reportProgress;
     }
-    static set reportProgress(fnc) {
+    set reportProgress(fnc) {
       if (typeof fnc != 'function') { return; }
       this.#reportProgress = fnc;
     }
-    static create(id, initialData) {
+    dispose() {
+      URL.revokeObjectURL(this.#url);
+      this.#url = null;
+      this.#reportProgress = null;
+      this.#workers = null;
+    }
+    create(id, initialData) {
       return new Promise((resolve, reject) => {
         const worker = new Worker(this.#url);
         worker.addEventListener(
@@ -134,14 +140,15 @@ javascript:
         this.add(worker);
       });
     }
-    static add(worker) {
+    add(worker) {
       this.#workers.push(worker);
     }
-    static cancelAll() {
+    cancelAll() {
       this.#workers.forEach((worker) => { worker.postMessage('cancel'); })
     }
   }
-  WorkerManager.source = () => {
+  const wm = new WorkerManager();
+  wm.source = () => {
     const regTitle = /<title>([^<]+)<\/title>/;
     const regAnchor = /<a\shref="[^"]+\/cccontainer\/pickid\/[^"]+">([^<]+)<\/a>/;
     const regDupes = /\（(\d+)(\+(\d+))?[^\)]+\）/;
@@ -192,7 +199,7 @@ javascript:
       }
     );
   };
-  WorkerManager.reportProgress = StatusManager.reportProgress;
+  wm.reportProgress = StatusManager.reportProgress;
   const res = await fetch('/help/alllist');
   const list = await res.json();
   const baseConCons = list.filter(concon => concon.id == concon.same_id);
@@ -205,11 +212,12 @@ javascript:
     .map((i) => baseConCons.slice(from(i), from(i + 1)));
   console.log(dividedConCons);
   const scannedConCons = await Promise.all(
-    dividedConCons.map((concons, index) => WorkerManager.create(index, concons))
+    dividedConCons.map((concons, index) => wm.create(index, concons))
   ).catch((err) => {
     StatusManager.abort(err);
-    WorkerManager.cancelAll();
+    wm.cancelAll();
   });
+  wm.dispose();
   console.log(`scannedConCons: ${StatusManager.current}`);
   if (!scannedConCons) { return; }
   console.log(scannedConCons);
