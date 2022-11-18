@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Duplicated Checker
 // @namespace    https://www.TakeAsh.net/
-// @version      0.1.202211170010
+// @version      0.1.202211190000
 // @description  scan concon list and order by duplication
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/help/alllist
@@ -10,7 +10,7 @@
 // ==/UserScript==
 
 javascript:
-(async function() {
+(async () => {
   'use strict';
   if (location.origin != 'https://c4.concon-collector.com') {
     alert('コンコンコレクターのサイトで実行して下さい');
@@ -90,16 +90,22 @@ javascript:
   }
   class WorkerManager {
     #url = null;
-    #reportProgress = () => { };
+    #reportProgress = (progress) => { };
     #workers = [];
     /**
+     * function as worker source
      * @param {() => void} fnc
+     * @memberof WorkerManager
      */
     set source(fnc) {
       if (typeof fnc != 'function') { return; }
       this.#url = URL.createObjectURL(
         new Blob([`(${fnc})();`], { type: 'application/javascript' }));
     }
+    /**
+     * function called by the worker while running.
+     * @memberof WorkerManager
+     */
     get reportProgress() {
       return this.#reportProgress;
     }
@@ -107,22 +113,34 @@ javascript:
       if (typeof fnc != 'function') { return; }
       this.#reportProgress = fnc;
     }
+    /**
+     * release resources
+     * @memberof WorkerManager
+     */
     dispose() {
       URL.revokeObjectURL(this.#url);
       this.#url = null;
       this.#reportProgress = null;
       this.#workers = null;
     }
+    /**
+     * create a Promise including Worker and start it
+     * @param {*} id Worker id
+     * @param {*} initialData Initial data for worker
+     * @return {Promise} Promise including Worker
+     * @memberof WorkerManager
+     */
     create(id, initialData) {
       return new Promise((resolve, reject) => {
         const worker = new Worker(this.#url);
+        worker.reportProgress = this.#reportProgress;
         worker.addEventListener(
           'message',
           (event) => {
             const data = event.data;
             switch (data.type) {
               case 'Progress':
-                this.#reportProgress(data.progress);
+                event.target.reportProgress(data.progress);
                 break;
               case 'Completed':
                 console.log(data.message);
@@ -137,12 +155,13 @@ javascript:
         );
         worker.addEventListener('error', reject);
         worker.postMessage({ id: id, data: initialData });
-        this.add(worker);
+        this.#workers.push(worker);
       });
     }
-    add(worker) {
-      this.#workers.push(worker);
-    }
+    /**
+     * notify all workers that they should be cancelled
+     * @memberof WorkerManager
+     */
     cancelAll() {
       this.#workers.forEach((worker) => { worker.postMessage('cancel'); })
     }
