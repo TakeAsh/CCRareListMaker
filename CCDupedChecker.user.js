@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon Duplicated Checker
 // @namespace    https://www.TakeAsh.net/
-// @version      0.1.202211190000
+// @version      0.1.202211190400
 // @description  scan concon list and order by duplication
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/help/alllist
@@ -92,6 +92,7 @@ javascript:
     #url = null;
     #reportProgress = (progress) => { };
     #workers = [];
+    #range = (max) => Array.from({ length: max }, (_, i) => (i));
     /**
      * function as worker source
      * @param {() => void} fnc
@@ -157,6 +158,19 @@ javascript:
         worker.postMessage({ id: id, data: initialData });
         this.#workers.push(worker);
       });
+    }
+    /**
+     * create workers from data and run them
+     * @param {Array} data array of initial data
+     * @param {number} threads
+     * @return {Promise} worker results
+     * @memberof WorkerManager
+     */
+    async run(data, threads) {
+      const from = (i) => Math.ceil(data.length * i / threads);
+      const divided = this.#range(threads).map((i) => data.slice(from(i), from(i + 1)));
+      console.log(divided);
+      return await Promise.all(divided.map((part, i) => this.create(i, part)));
     }
     /**
      * notify all workers that they should be cancelled
@@ -226,16 +240,11 @@ javascript:
   StatusManager.id = 'DupedCheckerResult';
   StatusManager.max = baseConCons.length;
   StatusManager.reportProgress();
-  const from = (i) => Math.ceil(baseConCons.length * i / maxThreads);
-  const dividedConCons = range(0, maxThreads - 1, 1)
-    .map((i) => baseConCons.slice(from(i), from(i + 1)));
-  console.log(dividedConCons);
-  const scannedConCons = await Promise.all(
-    dividedConCons.map((concons, index) => wm.create(index, concons))
-  ).catch((err) => {
-    StatusManager.abort(err);
-    wm.cancelAll();
-  });
+  const scannedConCons = await wm.run(baseConCons, maxThreads)
+    .catch((err) => {
+      StatusManager.abort(err);
+      wm.cancelAll();
+    });
   wm.dispose();
   console.log(`scannedConCons: ${StatusManager.current}`);
   if (!scannedConCons) { return; }

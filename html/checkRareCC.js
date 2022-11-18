@@ -6,6 +6,7 @@
     #url = null;
     #reportProgress = (progress) => { };
     #workers = [];
+    #range = (max) => Array.from({ length: max }, (_, i) => (i));
     /**
      * function as worker source
      * @param {() => void} fnc
@@ -73,6 +74,19 @@
       });
     }
     /**
+     * create workers from data and run them
+     * @param {Array} data array of initial data
+     * @param {number} threads
+     * @return {Promise} worker results
+     * @memberof WorkerManager
+     */
+    async run(data, threads) {
+      const from = (i) => Math.ceil(data.length * i / threads);
+      const divided = this.#range(threads).map((i) => data.slice(from(i), from(i + 1)));
+      console.log(divided);
+      return await Promise.all(divided.map((part, i) => this.create(i, part)));
+    }
+    /**
      * notify all workers that they should be cancelled
      * @memberof WorkerManager
      */
@@ -94,10 +108,10 @@
           return;
         }
         const id = event.data.id;
-        const param = event.data.data;
+        const ccIds = event.data.data;
         let result = '';
         let index = 0;
-        for (const ccId of param.ccIds) {
+        for (const ccId of ccIds) {
           if (isCancelled) {
             postMessage({ type: 'Error', message: `worker[${id}]: cancelled`, });
             return;
@@ -133,7 +147,6 @@
       }
     );
   };
-  const range = (start, stop, step = 1) => Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + (i * step));
   const toCCId = (node) => node.id.replace(/^get_/, '');
   const baseNodes = getNodesByXpath('//span[starts-with(@id,"get_")]');
   const nodes = baseNodes.reduce(
@@ -150,17 +163,13 @@
     nodes[progress.ccId].textContent = progress.result;
     showResult(`${++count}/${baseNodes.length}`);
   };
-  const from = (i) => Math.ceil(baseNodes.length * i / maxThreads);
-  await Promise.all(range(0, maxThreads - 1)
-    .map((i) => baseNodes.slice(from(i), from(i + 1)))
-    .map((nodes, index) => wm.create(index, { ccIds: nodes.map(node => toCCId(node)) }))
-  ).then(() => {
-    showResult('Completed', 'keyword');
-  }).catch((err) => {
-    isAborted = true;
-    wm.cancelAll();
-    showResult(err, 'error_message');
-  });
+  await wm.run(baseNodes.map(node => toCCId(node)), maxThreads)
+    .then(() => { showResult('Completed', 'keyword'); })
+    .catch((err) => {
+      isAborted = true;
+      wm.cancelAll();
+      showResult(err, 'error_message');
+    });
   wm.dispose();
 
   function getNodesByXpath(xpath, context) {
