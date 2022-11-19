@@ -2,7 +2,7 @@
 // @name           ConCon fur checker
 // @namespace      https://www.TakeAsh.net/
 // @ujs:published  2022-10-29 16:30
-// @version        0.1.202210291630
+// @version        0.1.2022110192230
 // @description    check you have furs or not.
 // @author         TakeAsh68k
 // @match          https://c4.concon-collector.com/help/alllist
@@ -76,7 +76,7 @@ javascript:
   ].forEach((line) => { doc.write(line); });
   doc.close();
   const script = doc.createElement('script');
-  script.type = 'text/javascript';
+  script.type = 'module';
   script.src = 'https://www.takeash.net/ConConCollector/RareCC/checkRareCC.js';
   doc.head.appendChild(script);
 })();
