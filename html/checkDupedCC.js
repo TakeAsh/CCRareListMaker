@@ -1,5 +1,5 @@
 ﻿'use strict';
-import WorkerManager from 'https://www.takeash.net/ConConCollector/RareCC/modules/WorkerManager.mjs';
+import WorkerManager from 'https://www.takeash.net/js/modules/WorkerManager.mjs';
 (async () => {
   if (location.origin != 'https://c4.concon-collector.com') {
     alert('コンコンコレクターのサイトで実行して下さい');

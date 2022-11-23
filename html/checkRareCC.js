@@ -1,5 +1,6 @@
 ﻿'use strict';
-import WorkerManager from 'https://www.takeash.net/ConConCollector/RareCC/modules/WorkerManager.mjs';
+import WorkerManager from 'https://www.takeash.net/js/modules/WorkerManager.mjs';
+import { getNodesByXpath } from 'https://www.takeash.net/js/modules/Util.mjs';
 (async () => {
   const d = document;
   const maxThreads = 24;
@@ -80,22 +81,6 @@ import WorkerManager from 'https://www.takeash.net/ConConCollector/RareCC/module
       showResult(err, 'error_message');
     });
   wm.dispose();
-
-  function getNodesByXpath(xpath, context) {
-    const itr = d.evaluate(
-      xpath,
-      context || d,
-      null,
-      XPathResult.ORDERED_NODE_ITERATOR_TYPE,
-      null
-    );
-    const nodes = [];
-    let node = null;
-    while (node = itr.iterateNext()) {
-      nodes.push(node);
-    }
-    return nodes;
-  }
 
   function showResult(message, classname) {
     const result = d.getElementById('Result') || d.createElement('span');
