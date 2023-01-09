@@ -50,22 +50,14 @@ function relief() {
 
 function explore() {
   checkOk: {
-    const currentAp = getNodesByXpath('//span[text()="現在AP"]')[0];
-    if (!currentAp || currentAp.nextSibling.textContent.trim() < 3) { break checkOk; }
-    const spanRestTime = getNodesByXpath('//span[@class="keyword" and text()="残り時間"]')[0];
-    if (!spanRestTime) { break checkOk; }
-    const m = spanRestTime.nextSibling.textContent.match(/\s*((?<min>\d+)分)?(?<sec>\d+)秒/);
+    if (getCurrentAp() < 3) { break checkOk; }
+    const restTime = getRestTime();
+    if (!restTime) { break checkOk; }
     const buttonAttacks = getNodesByXpath('//input[@type="submit" and contains(@value,"攻撃する")]');
     if (!buttonAttacks.length) { break checkOk; }
     let buttonAttack = buttonAttacks[1] || buttonAttacks[0];
-    if (m.groups.min > config.destoryLimit) {
-      const aPlayers = getNodesByXpath('//a[contains(@href,"profile")]');
-      aPlayers.shift(); // drop finding player
-      const lastMyAttack = aPlayers.find((a) => a.href.match(regMyProfile));
-      if (lastMyAttack) {
-        const m = lastMyAttack.parentNode.textContent.match(/ダメージを与えた！\((\d+).*\)/);
-        if (m && m[1] <= config.attackInterval) { break checkOk; }
-      }
+    if (restTime.min > config.destoryLimit && !isBeforeMaintenance()) {
+      if (getLastAttack() <= config.attackInterval) { break checkOk; }
       buttonAttack = buttonAttacks[0];
     }
     buttonAttack.click();
@@ -86,4 +78,36 @@ function setCookie(key, value, expireDate) {
     cookieStr += ';expires=' + expireDate;
   }
   d.cookie = cookieStr;
+}
+
+function getCurrentAp() {
+  const currentAp = getNodesByXpath('//span[text()="現在AP"]')[0];
+  return !currentAp
+    ? 0
+    : currentAp.nextSibling.textContent.trim();
+}
+
+function getRestTime() {
+  const spanRestTime = getNodesByXpath('//span[@class="keyword" and text()="残り時間"]')[0];
+  if (!spanRestTime) { return null; }
+  const m = spanRestTime.nextSibling.textContent.match(/\s*((?<min>\d+)分)?(?<sec>\d+)秒/);
+  return { min: m.groups.min || 0, sec: m.groups.sec || 0 };
+}
+
+function isBeforeMaintenance() {
+  const now = new Date();
+  const hour = now.getHours();
+  const min = now.getMinutes();
+  return hour == 3 && (60 - config.checkInterval * 4) <= min && min <= 59;
+}
+
+function getLastAttack() {
+  const aPlayers = getNodesByXpath('//a[contains(@href,"profile")]');
+  aPlayers.shift(); // drop finding player
+  const lastMyAttack = aPlayers.find((a) => a.href.match(regMyProfile));
+  if (!lastMyAttack) { return Number.MAX_VALUE; }
+  const m = lastMyAttack.parentNode.textContent.match(/ダメージを与えた！\((\d+).*\)/);
+  return m && m[1]
+    ? m[1]
+    : Number.MAX_VALUE;
 }
