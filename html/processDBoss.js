@@ -1,17 +1,11 @@
 ﻿'use strict';
+import Status from './modules/DBossProcesserStatus.mjs';
 import { getNodesByXpath } from 'https://www.takeash.net/js/modules/Util.mjs';
 
 const d = document;
-const statusDefault = {
-  myUserId: 0,
-  isProcessing: false,
-  ap: 0,
-  direction: 'New',
-};
-const cookieProcessDBoss = '_CCCP_ProcessDBoss';
 const nameDBossPage = 'dbossPage';
 const messageDone = 'DBossProc: Done';
-let status = getCookie(cookieProcessDBoss) || statusDefault;
+const status = new Status();
 const regMyProfile = new RegExp(`\/profile\/default\/${status.myUserId}\\b`);
 const buttonProcess = d.createElement('button');
 const buttonCancel = d.createElement('button');
@@ -31,7 +25,6 @@ function pageStatus() {
   if (!m || !m[1]) { return; }
   status.myUserId = m[1];
   status.ap = d.querySelector('#ap').textContent;
-  setCookie(cookieProcessDBoss, status, 30);
 }
 
 function pageRelief() {
@@ -94,7 +87,6 @@ function startProcessDBosses(event) {
   buttonProcess.disabled = true;
   buttonCancel.disabled = false;
   status.isProcessing = true;
-  setCookie(cookieProcessDBoss, status, 30);
   processDBoss();
 }
 
@@ -102,12 +94,10 @@ function stopProcessDBosses(event) {
   buttonProcess.disabled = false;
   buttonCancel.disabled = true;
   status.isProcessing = false;
-  setCookie(cookieProcessDBoss, status, 30);
 }
 
 function changeDirection(event) {
   status.direction = event.target.value;
-  setCookie(cookieProcessDBoss, status, 30);
 }
 
 function processDBosses(event) {
@@ -117,13 +107,12 @@ function processDBosses(event) {
 }
 
 function processDBoss() {
-  status = getCookie(cookieProcessDBoss) || statusDefault;
+  status.load();
   ok: {
     if (status.ap < 3) { break ok; }
     const dboss = status.direction == 'New' ? DBosses.shift() : DBosses.pop();
     if (!dboss) { break ok; }
     status.ap -= 3;
-    setCookie(cookieProcessDBoss, status, 30);
     dboss.click();
     return;
   }
@@ -133,7 +122,6 @@ function processDBoss() {
 function pageRidAttack() {
   if (!status.isProcessing) { return; }
   status.ap = getCurrentAp();
-  setCookie(cookieProcessDBoss, status, 30);
   const winRelief = window.opener || window.parent;
   if (status.ap < 3) {
     winRelief.postMessage(messageDone, location.origin);
@@ -142,7 +130,6 @@ function pageRidAttack() {
   const button = getNodesByXpath('//input[@type="submit" and @value="救援する"]')[0];
   if (button) {
     status.ap -= 3;
-    setCookie(cookieProcessDBoss, status, 30);
     button.click();
   } else {
     winRelief.postMessage(messageDone, location.origin);
@@ -154,20 +141,4 @@ function getCurrentAp() {
   return !currentAp
     ? 0
     : currentAp.nextSibling.textContent.trim();
-}
-
-function getCookie(key) {
-  const m = d.cookie.match(new RegExp(key + '\\s*=\\s*([^;]+)'));
-  return !m || !m[1]
-    ? null
-    : JSON.parse(m[1]);
-}
-
-function setCookie(key, obj, expireDate) {
-  let cookieStr = key + '=' + JSON.stringify(obj) + ';path=/';
-  if (expireDate > 0) {
-    expireDate = new Date(new Date().getTime() + 60 * 60 * 24 * expireDate * 1000).toGMTString();
-    cookieStr += ';expires=' + expireDate;
-  }
-  d.cookie = cookieStr;
 }
