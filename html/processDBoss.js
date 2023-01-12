@@ -6,6 +6,7 @@ const statusDefault = {
   myUserId: 0,
   isProcessing: false,
   ap: 0,
+  direction: 'New',
 };
 const cookieProcessDBoss = '_CCCP_ProcessDBoss';
 const nameDBossPage = 'dbossPage';
@@ -46,6 +47,31 @@ function pageRelief() {
   buttonCancel.disabled = true;
   buttonCancel.addEventListener('click', stopProcessDBosses);
   div.appendChild(buttonCancel);
+  div.appendChild(d.createTextNode(' '));
+  const radioNew = d.createElement('input');
+  radioNew.name = 'radioDirection';
+  radioNew.id = 'radioNew';
+  radioNew.type = 'radio';
+  radioNew.value = 'New';
+  radioNew.checked = radioNew.value == status.direction;
+  radioNew.addEventListener('change', changeDirection);
+  div.appendChild(radioNew);
+  const labelNew = d.createElement('label');
+  labelNew.htmlFor = radioNew.id;
+  labelNew.textContent = '↓';
+  div.appendChild(labelNew);
+  const radioOld = d.createElement('input');
+  radioOld.name = 'radioDirection';
+  radioOld.id = 'radioOld';
+  radioOld.type = 'radio';
+  radioOld.value = 'Old';
+  radioOld.checked = radioOld.value == status.direction;
+  radioOld.addEventListener('change', changeDirection);
+  div.appendChild(radioOld);
+  const labelOld = d.createElement('label');
+  labelOld.htmlFor = radioOld.id;
+  labelOld.textContent = '↑';
+  div.appendChild(labelOld);
   const divBox = d.createElement('div');
   divBox.style.display = 'flex';
   const divRelief = d.querySelector('#relief');
@@ -79,6 +105,11 @@ function stopProcessDBosses(event) {
   setCookie(cookieProcessDBoss, status, 30);
 }
 
+function changeDirection(event) {
+  status.direction = event.target.value;
+  setCookie(cookieProcessDBoss, status, 30);
+}
+
 function processDBosses(event) {
   if (event.origin != location.origin
     || event.data != messageDone) { return; }
@@ -89,7 +120,7 @@ function processDBoss() {
   status = getCookie(cookieProcessDBoss) || statusDefault;
   ok: {
     if (status.ap < 3) { break ok; }
-    const dboss = DBosses.shift();
+    const dboss = status.direction == 'New' ? DBosses.shift() : DBosses.pop();
     if (!dboss) { break ok; }
     status.ap -= 3;
     setCookie(cookieProcessDBoss, status, 30);
