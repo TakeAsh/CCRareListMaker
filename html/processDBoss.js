@@ -13,6 +13,7 @@ const messageDone = 'DBossProc: Done';
 let status = getCookie(cookieProcessDBoss) || statusDefault;
 const regMyProfile = new RegExp(`\/profile\/default\/${status.myUserId}\\b`);
 const buttonProcess = d.createElement('button');
+const buttonCancel = d.createElement('button');
 let DBosses = [];
 if (location.pathname.startsWith('/status')) {
   pageStatus();
@@ -40,6 +41,11 @@ function pageRelief() {
   buttonProcess.textContent = 'Process';
   buttonProcess.addEventListener('click', startProcessDBosses);
   div.appendChild(buttonProcess);
+  div.appendChild(d.createTextNode(' '));
+  buttonCancel.textContent = 'Cancel';
+  buttonCancel.disabled = true;
+  buttonCancel.addEventListener('click', stopProcessDBosses);
+  div.appendChild(buttonCancel);
   const divBox = d.createElement('div');
   divBox.style.display = 'flex';
   const divRelief = d.querySelector('#relief');
@@ -60,9 +66,17 @@ function pageRelief() {
 
 function startProcessDBosses(event) {
   buttonProcess.disabled = true;
+  buttonCancel.disabled = false;
   status.isProcessing = true;
   setCookie(cookieProcessDBoss, status, 30);
   processDBoss();
+}
+
+function stopProcessDBosses(event) {
+  buttonProcess.disabled = false;
+  buttonCancel.disabled = true;
+  status.isProcessing = false;
+  setCookie(cookieProcessDBoss, status, 30);
 }
 
 function processDBosses(event) {
@@ -82,9 +96,7 @@ function processDBoss() {
     dboss.click();
     return;
   }
-  status.isProcessing = false;
-  setCookie(cookieProcessDBoss, status, 30);
-  buttonProcess.disabled = false;
+  stopProcessDBosses();
 }
 
 function pageRidAttack() {
