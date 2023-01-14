@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         ConCon D-Boss Processer
 // @namespace    https://www.TakeAsh.net/
-// @version      0.0.1
+// @version      0.0.202301141230
 // @description  try to take over the world!
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/status

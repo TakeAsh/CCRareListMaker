@@ -122,24 +122,24 @@ function processDBoss() {
 
 function pageRidAttack() {
   if (!status.isProcessing) { return; }
-  status.ap = getCurrentAp();
-  const winRelief = window.opener || window.parent;
-  if (status.ap < 3) {
-    winRelief.postMessage(messageDone, location.origin);
-    return;
-  }
-  const button = getNodesByXpath('//input[@type="submit" and @value="救援する"]')[0];
-  if (button) {
+  const ap = getCurrentAp();
+  ok: {
+    if (status.ap < 0) { break ok; }
+    status.ap = ap;
+    if (status.ap < 3) { break ok; }
+    const button = getNodesByXpath('//input[@type="submit" and @value="救援する"]')[0];
+    if (!button) { break ok; }
     status.ap -= 3;
     button.click();
-  } else {
-    winRelief.postMessage(messageDone, location.origin);
+    return;
   }
+  const winRelief = window.opener || window.parent;
+  winRelief.postMessage(messageDone, location.origin);
 }
 
 function getCurrentAp() {
   const currentAp = getNodesByXpath('//span[text()="現在AP"]')[0];
   return !currentAp
-    ? 0
+    ? -1
     : currentAp.nextSibling.textContent.trim();
 }
