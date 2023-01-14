@@ -24,6 +24,7 @@ function pageStatus() {
   const m = aProfile.href.match(/\/profile\/default\/(\d+)/);
   if (!m || !m[1]) { return; }
   status.myUserId = m[1];
+  status.apLimit = d.querySelector('#ap_limit').textContent;
   status.ap = d.querySelector('#ap').textContent;
 }
 
