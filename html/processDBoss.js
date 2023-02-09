@@ -72,10 +72,10 @@ function pageRelief() {
   divRelief.parentNode.insertBefore(divBox, divRelief);
   divBox.appendChild(divRelief);
   divRelief.style.width = '50%';
-  const ifrane = d.createElement('iframe');
-  ifrane.name = nameDBossPage;
-  ifrane.style.width = '50%';
-  divBox.appendChild(ifrane);
+  const iframe = d.createElement('iframe');
+  iframe.name = nameDBossPage;
+  iframe.style.width = '50%';
+  divBox.appendChild(iframe);
   DBosses = getNodesByXpath('//a[contains(@href,"/rid/attack/")]')
     .map((dboss) => {
       dboss.target = nameDBossPage;
