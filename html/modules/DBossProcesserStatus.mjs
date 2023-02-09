@@ -10,7 +10,7 @@ export default class Status {
   #apLimit = 20;
   #ap = 0;
   #lastAccess = 0;
-  #direction = 'New';
+  #direction = directions[0];
 
   constructor() {
     this.load();
@@ -24,7 +24,7 @@ export default class Status {
 
   get isProcessing() { return this.#isProcessing; }
   set isProcessing(value) {
-    this.#isProcessing = value;
+    this.#isProcessing = !!value;
     this.save();
   }
 
