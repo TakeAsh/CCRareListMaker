@@ -1,10 +1,11 @@
 ﻿// ==UserScript==
 // @name         ConCon Boss Watcher
 // @namespace    https://www.TakeAsh.net/
-// @version      0.0.2023010705
+// @version      0.0.202302100330
 // @description  Watch boss and beat it repeatedly.
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/status
+// @match        https://c4.concon-collector.com/login
 // @match        https://c4.concon-collector.com/relief/default/1
 // @match        https://c4.concon-collector.com/chat
 // @match        https://c4.concon-collector.com/chat/*

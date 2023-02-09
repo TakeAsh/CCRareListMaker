@@ -7,11 +7,16 @@ const config = {
   attackInterval: 20,
   destoryLimit: 10,
 };
-const cookieName = '_CCCP_MyUserId';
-const myUserId = getCookie(cookieName);
+const cookieMyUserId = '_CCCP_MyUserId';
+const cookieKeepLogin = '_CCCP_KeepLogin';
+const cookieCredential = '_CCCP_Credential';
+const myUserId = getCookie(cookieMyUserId);
 const regMyProfile = new RegExp(`\/profile\/default\/${myUserId}\\b`);
 const page = location.pathname.match(/^\/([^\/]+)/)[1];
 switch (page) {
+  case 'login':
+    login();
+    break;
   case 'status':
     status();
     break;
@@ -24,12 +29,83 @@ switch (page) {
     break;
 }
 
+function login() {
+  const credentialRaw = getCookie(cookieCredential);
+  if (credentialRaw) {
+    setTimeout(
+      () => {
+        const credential = JSON.parse(credentialRaw);
+        getNodesByXpath('//input[@name="id"]')[0].value = credential.id;
+        getNodesByXpath('//input[@name="pass"]')[0].value = credential.pass;
+        getNodesByXpath('//input[@type="submit"]')[0].click();
+      },
+      10 * 1000
+    );
+  }
+  const form = d.querySelector('form');
+  if (form) {
+    form.addEventListener(
+      'submit',
+      (event) => {
+        const credential = {
+          id: getNodesByXpath('//input[@name="id"]')[0].value,
+          pass: getNodesByXpath('//input[@name="pass"]')[0].value,
+        };
+        setCookie(cookieCredential, JSON.stringify(credential), 30);
+      }
+    );
+  } else {
+    const aStatus = getNodesByXpath('//a[contains(@href,"/status")]')[0];
+    if (aStatus) {
+      aStatus.click();
+    }
+  }
+}
+
 function status() {
+  let isKeepLogin = getCookieBool(cookieKeepLogin);
+  let timerCheckLogin = undefined;
+  if (isKeepLogin) {
+    timerCheckLogin = setTimeout(() => { location = location.href; }, 3 * 60 * 1000);
+    const aLogin = Array.from(document.querySelectorAll('a'))
+      .filter((a) => a.href.match(/\/login$/));
+    if (aLogin[0]) {
+      aLogin[0].click();
+    }
+  }
   const aProfile = getNodesByXpath('//a[text()="プロフィール"]')[0];
-  if (!aProfile) { return; }
-  const m = aProfile.href.match(/\/profile\/default\/(\d+)/);
-  if (!m || !m[1]) { return; }
-  setCookie(cookieName, m[1], 30);
+  if (aProfile) {
+    const m = aProfile.href.match(/\/profile\/default\/(\d+)/);
+    if (m && m[1]) {
+      setCookie(cookieMyUserId, m[1], 30);
+    }
+  }
+  const aAccount = getNodesByXpath('//a[contains(@href,"/account")]')[0];
+  if (aAccount) {
+    const span = d.createElement('span');
+    aAccount.parentNode.appendChild(span);
+    const checkbox = d.createElement('input');
+    checkbox.id = 'cbKeepLogin';
+    checkbox.type = 'checkbox';
+    checkbox.checked = isKeepLogin;
+    checkbox.addEventListener(
+      'change',
+      (event) => {
+        isKeepLogin = event.target.checked;
+        setCookieBool(cookieKeepLogin, isKeepLogin);
+        if (isKeepLogin) {
+          timerCheckLogin = setTimeout(() => { location = location.href; }, 3 * 60 * 1000);
+        } else {
+          clearTimeout(timerCheckLogin);
+        }
+      }
+    );
+    span.appendChild(checkbox);
+    const label = d.createElement('label');
+    label.htmlFor = 'cbKeepLogin';
+    label.textContent = 'Keep Login';
+    span.appendChild(label);
+  }
 }
 
 function relief() {
@@ -71,6 +147,12 @@ function getCookie(key) {
   return m && m[1] || '';
 }
 
+function getCookieBool(key) {
+  return getCookie(key).toLowerCase() != 'false'
+    ? true
+    : false;
+}
+
 function setCookie(key, value, expireDate) {
   let cookieStr = key + '=' + value + ';path=/';
   if (expireDate > 0) {
@@ -78,6 +160,10 @@ function setCookie(key, value, expireDate) {
     cookieStr += ';expires=' + expireDate;
   }
   d.cookie = cookieStr;
+}
+
+function setCookieBool(key, value, expireDate) {
+  setCookie(key, value ? 'true' : 'false', expireDate);
 }
 
 function getCurrentAp() {
