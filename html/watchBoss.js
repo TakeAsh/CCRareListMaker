@@ -66,7 +66,7 @@ function status() {
   let isKeepLogin = getCookieBool(cookieKeepLogin);
   let timerCheckLogin = undefined;
   if (isKeepLogin) {
-    timerCheckLogin = setTimeout(() => { location = location.href; }, 3 * 60 * 1000);
+    timerCheckLogin = setupReloadTimer();
     const aLogin = Array.from(document.querySelectorAll('a'))
       .filter((a) => a.href.match(/\/login$/));
     if (aLogin[0]) {
@@ -94,7 +94,7 @@ function status() {
         isKeepLogin = event.target.checked;
         setCookieBool(cookieKeepLogin, isKeepLogin);
         if (isKeepLogin) {
-          timerCheckLogin = setTimeout(() => { location = location.href; }, 3 * 60 * 1000);
+          timerCheckLogin = setupReloadTimer();
         } else {
           clearTimeout(timerCheckLogin);
         }
@@ -115,13 +115,7 @@ function relief() {
       a.target = `boss${bossId}`;
       a.click();
     });
-  const now = new Date();
-  const hour = now.getHours();
-  const min = now.getMinutes();
-  const interval = hour == 4 && 0 <= min && min <= 31
-    ? (32 - min) * 60 * 1000
-    : config.checkInterval * 60 * 1000;
-  setInterval(() => { location = location.href; }, interval);
+  setupReloadTimer();
 }
 
 function explore() {
@@ -164,6 +158,19 @@ function setCookie(key, value, expireDate) {
 
 function setCookieBool(key, value, expireDate) {
   setCookie(key, value ? 'true' : 'false', expireDate);
+}
+
+function calcInterval() {
+  const now = new Date();
+  const hour = now.getHours();
+  const min = now.getMinutes();
+  return hour == 4 && 0 <= min && min <= 31
+    ? (32 - min) * 60 * 1000
+    : config.checkInterval * 60 * 1000;
+}
+
+function setupReloadTimer() {
+  return setTimeout(() => { location = location.href; }, calcInterval());
 }
 
 function getCurrentAp() {
