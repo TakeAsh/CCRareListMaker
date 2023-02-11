@@ -30,11 +30,10 @@ switch (page) {
 }
 
 function login() {
-  const credentialRaw = getCookie(cookieCredential);
-  if (credentialRaw) {
+  if (localStorage[cookieCredential]) {
     setTimeout(
       () => {
-        const credential = JSON.parse(credentialRaw);
+        const credential = JSON.parse(localStorage[cookieCredential]);
         getNodesByXpath('//input[@name="id"]')[0].value = credential.id;
         getNodesByXpath('//input[@name="pass"]')[0].value = credential.pass;
         getNodesByXpath('//input[@type="submit"]')[0].click();
@@ -51,7 +50,7 @@ function login() {
           id: getNodesByXpath('//input[@name="id"]')[0].value,
           pass: getNodesByXpath('//input[@name="pass"]')[0].value,
         };
-        setCookie(cookieCredential, JSON.stringify(credential), 30);
+        localStorage[cookieCredential] = JSON.stringify(credential);
       }
     );
   } else {
