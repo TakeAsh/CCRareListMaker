@@ -56,6 +56,8 @@ function login() {
   } else {
     const aStatus = getNodesByXpath('//a[contains(@href,"/status")]')[0];
     if (aStatus) {
+      window.open('/relief/default/1', 'reliefPage');
+      window.open('/chat', 'chatPage');
       aStatus.click();
     }
   }
