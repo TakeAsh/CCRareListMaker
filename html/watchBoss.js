@@ -58,6 +58,7 @@ function login() {
     if (aStatus) {
       window.open('/relief/default/1', 'reliefPage');
       window.open('/chat', 'chatPage');
+      window.open('/rid/list', 'ridPage');
       aStatus.click();
     }
   }
