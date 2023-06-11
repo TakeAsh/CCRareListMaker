@@ -1,5 +1,6 @@
 ﻿'use strict';
 import { getNodesByXpath } from 'https://www.takeash.net/js/modules/Util.mjs';
+import { getCookie, setCookie } from 'https://www.takeash.net/js/modules/Cookie.mjs';
 import { prepareElement, addStyle } from 'https://www.takeash.net/js/modules/PrepareElement.mjs';
 
 const w = window;
@@ -68,7 +69,7 @@ function login() {
 }
 
 function status() {
-  let isKeepLogin = getCookieBool(cookieKeepLogin);
+  let isKeepLogin = getCookie(cookieKeepLogin);
   let timerCheckLogin = undefined;
   if (isKeepLogin) {
     timerCheckLogin = setupReloadTimer();
@@ -98,7 +99,7 @@ function status() {
           events: {
             change: (event) => {
               isKeepLogin = event.target.checked;
-              setCookieBool(cookieKeepLogin, isKeepLogin);
+              setCookie(cookieKeepLogin, isKeepLogin);
               if (isKeepLogin) {
                 timerCheckLogin = setupReloadTimer();
               } else {
@@ -171,30 +172,6 @@ function makeBossId(uri) {
   return !bossId
     ? null
     : `boss${bossId}`;
-}
-
-function getCookie(key) {
-  const m = d.cookie.match(new RegExp(key + '\\s*=\\s*([^;]+)'));
-  return m && m[1] || '';
-}
-
-function getCookieBool(key) {
-  return getCookie(key).toLowerCase() != 'false'
-    ? true
-    : false;
-}
-
-function setCookie(key, value, expireDate) {
-  let cookieStr = key + '=' + value + ';path=/';
-  if (expireDate > 0) {
-    expireDate = new Date(new Date().getTime() + 60 * 60 * 24 * expireDate * 1000).toGMTString();
-    cookieStr += ';expires=' + expireDate;
-  }
-  d.cookie = cookieStr;
-}
-
-function setCookieBool(key, value, expireDate) {
-  setCookie(key, value ? 'true' : 'false', expireDate);
 }
 
 function calcInterval() {
