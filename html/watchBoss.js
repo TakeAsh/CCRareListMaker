@@ -120,6 +120,14 @@ function status() {
 }
 
 function relief() {
+  addStyle({
+    '#relief > div': {
+      height: 'initial',
+    },
+    '.BossFrame': {
+      position: 'relative',
+    },
+  });
   w.addEventListener(
     'message',
     (event) => {
@@ -131,12 +139,29 @@ function relief() {
   );
   getNodesByXpath('//a[contains(@href,"/explore/coop/")]')
     .forEach((a) => {
-      const iframe = prepareElement({
-        tag: 'iframe',
-        name: makeBossId(a.href),
-        src: a.href,
-      });
-      d.body.appendChild(iframe);
+      const iframe = prepareElement(
+        {
+          tag: 'details',
+          children: [
+            {
+              tag: 'summary',
+            },
+            {
+              tag: 'div',
+              classes: ['BossFrame',],
+              children: [{
+                tag: 'iframe',
+                name: makeBossId(a.href),
+                src: a.href,
+                width: 500,
+                height: 400,
+              }],
+            }
+          ],
+        }
+      );
+      a.parentNode.appendChild(iframe);
+      iframe.querySelector('summary').appendChild(a);
     });
   setupReloadTimer();
 }
@@ -163,7 +188,7 @@ function explore() {
         location.origin
       );
     },
-    10 * 1000
+    calcInterval()
   );
 }
 
