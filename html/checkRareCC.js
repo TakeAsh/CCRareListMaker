@@ -3,7 +3,7 @@ import WorkerManager from 'https://www.takeash.net/js/modules/WorkerManager.mjs'
 import { getNodesByXpath } from 'https://www.takeash.net/js/modules/Util.mjs';
 (async () => {
   const d = document;
-  const maxThreads = 24;
+  const maxThreads = 18;
   const wm = new WorkerManager();
   wm.source = () => {
     const uriRareBase = 'https://c4.concon-collector.com/view/default/';
