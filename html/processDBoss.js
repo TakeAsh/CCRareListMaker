@@ -1,19 +1,62 @@
 ﻿'use strict';
 import Status from './modules/DBossProcesserStatus.mjs';
-import { getNodesByXpath } from 'https://www.takeash.net/js/modules/Util.mjs';
+import { getNodesByXpath, sleep } from 'https://www.takeash.net/js/modules/Util.mjs';
+import { prepareElement, addStyle } from 'https://www.takeash.net/js/modules/PrepareElement.mjs';
 
 const d = document;
 const nameDBossPage = 'dbossPage';
 const messageDone = 'DBossProc: Done';
 const status = new Status();
-const regMyProfile = new RegExp(`\/profile\/default\/${status.myUserId}\\b`);
-const buttonProcess = d.createElement('button');
-const buttonCancel = d.createElement('button');
+const ui = {
+  buttonProcess: prepareElement({
+    tag: 'button',
+    textContent: 'Process',
+    events: { click: startProcessDBosses, },
+  }),
+  buttonCancel: prepareElement({
+    tag: 'button',
+    textContent: 'Cancel',
+    disabled: true,
+    events: { click: stopProcessDBosses, },
+  }),
+  radioNew: prepareElement({
+    tag: 'input',
+    name: 'radioDirection',
+    id: 'radioNew',
+    type: 'radio',
+    value: 'New',
+    checked: status.direction == 'New',
+    events: { change: changeDirection, },
+  }),
+  labelNew: prepareElement({
+    tag: 'label',
+    htmlFor: 'radioNew',
+    textContent: '↓',
+  }),
+  radioOld: prepareElement({
+    tag: 'input',
+    name: 'radioDirection',
+    id: 'radioOld',
+    type: 'radio',
+    value: 'Old',
+    checked: status.direction == 'Old',
+    events: { change: changeDirection, },
+  }),
+  labelOld: prepareElement({
+    tag: 'label',
+    htmlFor: 'radioOld',
+    textContent: '↑',
+  }),
+};
 let DBosses = [];
 if (location.pathname.startsWith('/status')) {
   pageStatus();
 } else if (location.pathname.startsWith('/relief/default/2')) {
+  await sleep(300);
   pageRelief();
+} else if (location.pathname.startsWith('/chat')) {
+  await sleep(300);
+  pageChat();
 } else if (location.pathname.startsWith('/rid/attack/')) {
   pageRidAttack();
 }
@@ -32,73 +75,126 @@ function pageRelief() {
   const div = Array.from(d.querySelectorAll('div'))
     .find((div) => div.textContent.match(/^\s*全部\s+\/\s+探索\s+\/\s+討伐\s*$/));
   if (!div) { return; }
-  div.appendChild(d.createTextNode(' / '));
-  buttonProcess.textContent = 'Process';
-  buttonProcess.addEventListener('click', startProcessDBosses);
-  div.appendChild(buttonProcess);
-  div.appendChild(d.createTextNode(' '));
-  buttonCancel.textContent = 'Cancel';
-  buttonCancel.disabled = true;
-  buttonCancel.addEventListener('click', stopProcessDBosses);
-  div.appendChild(buttonCancel);
-  div.appendChild(d.createTextNode(' '));
-  const radioNew = d.createElement('input');
-  radioNew.name = 'radioDirection';
-  radioNew.id = 'radioNew';
-  radioNew.type = 'radio';
-  radioNew.value = 'New';
-  radioNew.checked = radioNew.value == status.direction;
-  radioNew.addEventListener('change', changeDirection);
-  div.appendChild(radioNew);
-  const labelNew = d.createElement('label');
-  labelNew.htmlFor = radioNew.id;
-  labelNew.textContent = '↓';
-  div.appendChild(labelNew);
-  const radioOld = d.createElement('input');
-  radioOld.name = 'radioDirection';
-  radioOld.id = 'radioOld';
-  radioOld.type = 'radio';
-  radioOld.value = 'Old';
-  radioOld.checked = radioOld.value == status.direction;
-  radioOld.addEventListener('change', changeDirection);
-  div.appendChild(radioOld);
-  const labelOld = d.createElement('label');
-  labelOld.htmlFor = radioOld.id;
-  labelOld.textContent = '↑';
-  div.appendChild(labelOld);
-  const divBox = d.createElement('div');
-  divBox.style.display = 'flex';
+  [
+    d.createTextNode(' / '),
+    ui.buttonProcess, d.createTextNode(' '),
+    ui.buttonCancel, d.createTextNode(' '),
+    ui.radioNew, ui.labelNew, ui.radioOld, ui.labelOld,
+  ].forEach(node => {
+    div.appendChild(node);
+  });
+  const divBox = prepareElement({
+    tag: 'div',
+    style: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr'
+    },
+  });
   const divRelief = d.querySelector('#relief');
   divRelief.parentNode.insertBefore(divBox, divRelief);
   divBox.appendChild(divRelief);
-  divRelief.style.width = '50%';
-  const iframe = d.createElement('iframe');
-  iframe.name = nameDBossPage;
-  iframe.style.width = '50%';
+  const iframe = prepareElement({
+    tag: 'iframe',
+    name: nameDBossPage,
+    style: { width: '100%', height: '98%', },
+  });
   divBox.appendChild(iframe);
-  DBosses = getNodesByXpath('//a[contains(@href,"/rid/attack/")]')
-    .map((dboss) => {
-      dboss.target = nameDBossPage;
-      return dboss;
-    });
+  DBosses = getDBosses();
+  window.addEventListener('message', processDBosses);
+}
+
+function pageChat() {
+  addStyle({
+    '#all': {
+      width: 'initial',
+    },
+    '#divBox': {
+      display: 'grid',
+    },
+    '.log': {
+      width: 'initial',
+    },
+    '.log2': {
+      width: 'initial',
+    },
+  });
+  const divBox = prepareElement({
+    tag: 'div',
+    id: 'divBox',
+  });
+  const divLog = d.querySelector('div[class*="log"]');
+  const divLog2 = d.querySelector('div[class*="log2"]');
+  const divDBoss = prepareElement({
+    tag: 'div',
+    children: [
+      {
+        tag: 'div',
+        id: 'DBossProc_Command',
+      },
+      {
+        tag: 'iframe',
+        name: nameDBossPage,
+        style: { position: 'relative', width: '100%', height: '98%', },
+      },
+    ],
+  });
+  divLog.parentNode.appendChild(divBox);
+  [divLog, divLog2, divDBoss]
+    .filter(div => div.children.length)
+    .forEach(div => divBox.appendChild(div));
+  divBox.style.gridTemplateColumns =
+    divLog2.children.length == 0 ? '5fr 3fr' :
+      divLog.children.length == 0 ? '2fr 3fr' :
+        '5fr 2fr 3fr';
+  const divDBossCommand = d.getElementById('DBossProc_Command');
+  [
+    ui.buttonProcess, d.createTextNode(' '),
+    ui.buttonCancel, d.createTextNode(' '),
+    ui.radioNew, ui.labelNew, ui.radioOld, ui.labelOld,
+  ].forEach(node => {
+    divDBossCommand.appendChild(node);
+  });
+  DBosses = getDBosses_Chat();
   window.addEventListener('message', processDBosses);
 }
 
 function startProcessDBosses(event) {
-  buttonProcess.disabled = true;
-  buttonCancel.disabled = false;
+  ui.buttonProcess.disabled = true;
+  ui.buttonCancel.disabled = false;
   status.isProcessing = true;
   processDBoss();
 }
 
 function stopProcessDBosses(event) {
-  buttonProcess.disabled = false;
-  buttonCancel.disabled = true;
+  ui.buttonProcess.disabled = false;
+  ui.buttonCancel.disabled = true;
   status.isProcessing = false;
 }
 
 function changeDirection(event) {
   status.direction = event.target.value;
+}
+
+function getDBosses(context) {
+  return getNodesByXpath('.//a[contains(@href,"/rid/attack/")]', context)
+    .map((dboss) => {
+      dboss.target = nameDBossPage;
+      return dboss;
+    });
+}
+
+function getDBosses_Chat() {
+  const myPath = `/profile/default/${status.myUserId}`;
+  const divBosses = getNodesByXpath('//div[contains(@class,"log2")]/div')
+    .filter(div => !div.querySelector(`a[href$="${myPath}"]`))
+    .reduce(
+      (acc, cur) => {
+        acc.push(...getDBosses(cur));
+        return acc;
+      },
+      []
+    );
+  return divBosses;
 }
 
 function processDBosses(event) {

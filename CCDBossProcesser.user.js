@@ -1,13 +1,15 @@
 ﻿// ==UserScript==
 // @name         ConCon D-Boss Processer
 // @namespace    https://www.TakeAsh.net/
-// @version      0.0.202301141230
+// @version      2026-02-11_17:00
 // @description  try to take over the world!
 // @author       TakeAsh68k
 // @match        https://c4.concon-collector.com/status
 // @match        https://c4.concon-collector.com/relief/default/2
 // @match        https://c4.concon-collector.com/relief/default/2/*
 // @match        https://c4.concon-collector.com/rid/attack/*
+// @match        https://c4.concon-collector.com/chat
+// @match        https://c4.concon-collector.com/chat/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=concon-collector.com
 // @grant        none
 // ==/UserScript==
