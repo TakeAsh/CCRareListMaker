@@ -111,6 +111,11 @@ function pageChat() {
     '#divBox': {
       display: 'grid',
     },
+    '#divDBoss': {
+      position: 'sticky',
+      top: '0em',
+      height: '100vh',
+    },
     '.log': {
       width: 'initial',
     },
@@ -126,17 +131,21 @@ function pageChat() {
   const divLog2 = d.querySelector('div[class*="log2"]');
   const divDBoss = prepareElement({
     tag: 'div',
-    children: [
-      {
-        tag: 'div',
-        id: 'DBossProc_Command',
-      },
-      {
-        tag: 'iframe',
-        name: nameDBossPage,
-        style: { position: 'relative', width: '100%', height: '98%', },
-      },
-    ],
+    children: [{
+      tag: 'div',
+      id: 'divDBoss',
+      children: [
+        {
+          tag: 'div',
+          id: 'DBossProc_Command',
+        },
+        {
+          tag: 'iframe',
+          name: nameDBossPage,
+          style: { position: 'relative', width: '100%', height: '98%', },
+        },
+      ],
+    },],
   });
   divLog.parentNode.appendChild(divBox);
   [divLog, divLog2, divDBoss]
